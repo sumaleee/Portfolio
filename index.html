@@ -176,7 +176,7 @@
     /* Consistent inner content container */
     .page-inner {
       max-width: 1060px; margin: 0 auto; width: 100%;
-      padding: 70px 52px 100px;
+      padding: 70px 52px 100px 52px;
       zoom: 1.25;
     }
     .page-heading {
@@ -193,6 +193,7 @@
       display: flex; flex-direction: column; align-items: center; gap: 20px;
       z-index: 50;
     }
+    #about .page-scroll-wrap { padding-right: 48px; }
     .spy-dot {
       width: 9px; height: 9px; border-radius: 50%;
       background: var(--text-faint); cursor: pointer; flex-shrink: 0;
@@ -345,14 +346,13 @@
       font-style: italic; font-weight: 400; max-width: 640px;
     }
     .ref-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 14px;
+      display: flex; flex-direction: column; gap: 12px;
     }
     .ref-attr { display: flex; flex-direction: column; gap: 2px; }
     .ref-name { font-size: 13.5px; font-weight: 650; color: var(--text); }
     .ref-meta { font-size: 12px; color: var(--text-faint); }
     .ref-meta span { color: var(--accent); opacity: 0.85; }
-    .ref-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .ref-actions { display: flex; gap: 8px; }
     .ref-btn {
       display: flex; align-items: center; justify-content: center; gap: 5px;
       font-size: 12px; font-weight: 600; padding: 7px 14px;
@@ -517,15 +517,58 @@
     .page.active > * { animation: fadeUp 0.38s cubic-bezier(0.4,0,0.2,1) both; }
 
 
-    /* ─── Responsive ─────────────────────────────────────────────────── */
-    @media (max-width: 700px) {
-      nav { padding: 0 22px; }
-      .nav-tab { padding: 6px 10px; font-size: 13.5px; }
-      .nav-right { gap: 14px; }
-      .page-inner { padding: 48px 22px 72px; }
-      .about-quicknav { padding: 16px 22px 0; }
-      .contact-links { grid-template-columns: 1fr; }
+    /* ─── Mobile view toggle button ─────────────────────────────────── */
+    #mobile-toggle {
+      display: flex; align-items: center; gap: 7px;
+      background: none; border: 1px solid var(--border);
+      border-radius: 7px; padding: 5px 11px;
+      color: var(--text-dim); font-size: 12px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.04em;
+      transition: border-color var(--transition), color var(--transition), background var(--transition);
+      font-family: var(--font-body);
     }
+    #mobile-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    #mobile-toggle svg { width: 13px; height: 13px; }
+    body.mobile #mobile-toggle { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    /* ─── Mobile styles (body.mobile) ───────────────────────────────── */
+    body.mobile {
+      --hero-name-size: clamp(38px, 11vw, 56px);
+      --hero-tagline-size: clamp(14px, 4vw, 18px);
+      --rotating-size: clamp(12px, 3.5vw, 15px);
+    }
+    body.mobile nav { padding: 0 18px; }
+    body.mobile .nav-tabs { display: none; }
+    body.mobile .nav-bottom {
+      display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(13,13,15,0.92); backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border); z-index: 200;
+      justify-content: space-around; padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    }
+    .nav-bottom { display: none; }
+    body.mobile .nav-bottom-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-faint); cursor: pointer; padding: 4px 16px;
+      transition: color var(--transition);
+    }
+    body.mobile .nav-bottom-tab.active { color: var(--accent); }
+    body.mobile .nav-bottom-tab svg { width: 20px; height: 20px; }
+    body.mobile .page-inner {
+      padding: calc(var(--nav-h) + 24px) 20px 100px;
+      zoom: 1;
+    }
+    body.mobile .page-heading { font-size: 28px; }
+    body.mobile .page-subheading { font-size: 14px; margin-bottom: 32px; }
+    body.mobile .about-quicknav { margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; }
+    body.mobile .skills-grid { grid-template-columns: 1fr; }
+    body.mobile .project-card { flex-direction: column !important; }
+    body.mobile .project-card img { width: 100% !important; height: 160px !important; }
+    body.mobile .ref-block { padding-left: 16px; }
+    body.mobile .contact-links { max-width: 100%; }
+    body.mobile #home { padding: var(--nav-h) 24px 80px; }
+    body.mobile .hero-tagline { font-size: var(--hero-tagline-size); }
+    body.mobile .social-row { gap: 10px; }
   </style>
 </head>
 <body>
@@ -542,6 +585,10 @@
       <div class="nav-tab" data-page="projects">Projects</div>
       <div class="nav-tab" data-page="contact">Contact</div>
     </div>
+    <button id="mobile-toggle" title="Toggle mobile view">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      Mobile
+    </button>
     <button class="pause-btn" id="pause-btn" aria-label="Pause animation">
       <svg id="pause-icon" viewBox="0 0 12 12" fill="currentColor">
         <rect x="1.5" y="1" width="3.5" height="10" rx="1"/>
@@ -553,6 +600,26 @@
     </button>
   </div>
 </nav>
+
+<!-- ─── MOBILE BOTTOM NAV ────────────────────────────────── -->
+<div class="nav-bottom">
+  <div class="nav-bottom-tab active" data-page="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </div>
+  <div class="nav-bottom-tab" data-page="about">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    About
+  </div>
+  <div class="nav-bottom-tab" data-page="projects">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Projects
+  </div>
+  <div class="nav-bottom-tab" data-page="contact">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Contact
+  </div>
+</div>
 
 <!-- ─── HOME ──────────────────────────────────────────────── -->
 <section id="home" class="page active">
@@ -1193,6 +1260,9 @@
   function showPage(id) {
     pages.forEach(p => p.classList.toggle('active', p.id === id));
     tabs.forEach(t  => t.classList.toggle('active', t.dataset.page === id));
+    document.querySelectorAll('.nav-bottom-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.page === id)
+    );
     history.pushState(null, '', '#' + id);
     if (id !== 'about') {
       const ac = document.getElementById('about-content');
@@ -1202,7 +1272,7 @@
   }
 
   tabs.forEach(t => t.addEventListener('click', () => showPage(t.dataset.page)));
-  document.querySelector('.nav-logo').addEventListener('click', () => showPage('home'));
+  document.querySelector('.nav-logo').addEventListener('click', () => window.showPage('home'));
   const hash = location.hash.replace('#', '');
   const startPage = (hash && document.getElementById(hash)) ? hash : 'home';
   showPage(startPage);
@@ -1245,6 +1315,45 @@
    PAUSE BUTTON
 ───────────────────────────────────────────────────────────────────── */
 (function () {
+  /* ── Mobile view toggle ── */
+  const mobileToggle = document.getElementById('mobile-toggle');
+  function setMobile(on) {
+    document.body.classList.toggle('mobile', on);
+    localStorage.setItem('mobileView', on ? '1' : '0');
+  }
+  mobileToggle.addEventListener('click', () => {
+    const next = !document.body.classList.contains('mobile');
+    setMobile(next);
+    localStorage.setItem('mobileViewManual', '1');
+  });
+
+  // Auto-detect mobile on load and resize (unless user has manually toggled)
+  function autoDetectMobile() {
+    if (localStorage.getItem('mobileViewManual')) return;
+    setMobile(window.innerWidth / window.innerHeight < 1);
+  }
+  window.addEventListener('resize', autoDetectMobile);
+  if (localStorage.getItem('mobileView') === '1') setMobile(true);
+  else autoDetectMobile();
+
+  /* ── Bottom nav tabs ── */
+  document.querySelectorAll('.nav-bottom-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nav-bottom-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      window.showPage(tab.dataset.page);
+    });
+  });
+
+  /* Keep bottom nav in sync when top nav is used */
+  const origShowPage = window.showPage;
+  window.showPage = function(page) {
+    origShowPage(page);
+    document.querySelectorAll('.nav-bottom-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.page === page)
+    );
+  };
+
   const btn       = document.getElementById('pause-btn');
   const pauseIcon = document.getElementById('pause-icon');
   const playIcon  = document.getElementById('play-icon');
