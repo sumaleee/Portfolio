@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sumalee — Data Scientist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Custom Properties ─────────────────────────────────────────── */
+    :root {
+      --bg:          #0d0d0f;
+      --surface:     #141418;
+      --surface-2:   #1c1c22;
+      --border:      rgba(255,255,255,0.07);
+      --text:        #ffffff;
+      --text-dim:    rgba(255,255,255,0.55);
+      --text-faint:  rgba(255,255,255,0.28);
+      --accent:      #a78bfa;
+      --accent-dim:  rgba(167,139,250,0.15);
+      --accent-glow: rgba(167,139,250,0.35);
+      --nav-h:       72px;
+      --radius:      14px;
+      --radius-sm:   9px;
+      --transition:  0.22s cubic-bezier(0.4,0,0.2,1);
+
+      --font-body:             'Geist', 'Inter', sans-serif;
+      --font-heading:          'Geist', 'Inter', sans-serif;
+      --hero-name-size:        clamp(50px, 9vw, 90px);
+      --hero-tagline-size:     clamp(23px, 2.8vw, 32px);
+      --hero-tagline-weight:   600;
+      --hero-tagline-width:    1040px;
+      --rotating-size:         clamp(16px, 2vw, 20px);
+    }
+
+    /* ─── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: var(--font-heading); }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+
+    /* ─── Canvas ─────────────────────────────────────────────────────── */
+    #bg-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    body.anim-paused #bg-canvas { opacity: 0; }
+
+    /* ─── Navigation ─────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--nav-h); z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 52px;
+      background: rgba(13,13,15,0.78);
+      backdrop-filter: blur(20px) saturate(120%);
+      -webkit-backdrop-filter: blur(20px) saturate(120%);
+      border-bottom: 1px solid var(--border);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    nav.nav-hidden { transform: translateY(-100%); }
+    .nav-logo {
+      font-size: 24px; font-weight: 700; letter-spacing: -0.01em;
+      color: var(--text); cursor: pointer;
+      transition: color var(--transition); user-select: none;
+      font-family: var(--font-heading);
+    }
+    .nav-logo:hover { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 28px; }
+    .nav-tabs  { display: flex; }
+    .nav-tab {
+      position: relative; padding: 8px 20px;
+      font-size: 15px; font-weight: 500; color: var(--text-dim);
+      transition: color var(--transition);
+      cursor: pointer; user-select: none; letter-spacing: 0.005em;
+    }
+    .nav-tab::after {
+      content: ''; position: absolute; bottom: 0; left: 20px; right: 20px;
+      height: 2px; background: var(--accent); border-radius: 2px;
+      transform: scaleX(0); transform-origin: center;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--text); }
+    .nav-tab.active::after { transform: scaleX(1); }
+
+    .pause-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 7px;
+      color: var(--text-faint); flex-shrink: 0;
+      transition: color var(--transition), border-color var(--transition), background var(--transition);
+    }
+    .pause-btn:hover { color: var(--text-dim); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+    .pause-btn svg { width: 13px; height: 13px; }
+    body.anim-paused .pause-btn { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+
+    /* ─── Page System ────────────────────────────────────────────────── */
+    .page { position: fixed; inset: 0; z-index: 10; display: none; overflow: hidden; }
+    .page.active { display: flex; }
+
+    /* ─── Home Page ──────────────────────────────────────────────────── */
+    #home {
+      align-items: center; justify-content: center; flex-direction: column;
+      text-align: center; padding: var(--nav-h) 40px 0;
+    }
+    .hero-name {
+      font-size: var(--hero-name-size);
+      font-weight: 800; letter-spacing: -0.035em; line-height: 1.04;
+      color: #fff; margin-bottom: 28px; font-family: var(--font-heading);
+    }
+    .hero-tagline {
+      max-width: var(--hero-tagline-width);
+      font-size: var(--hero-tagline-size);
+      font-weight: var(--hero-tagline-weight);
+      color: rgba(255,255,255,0.88);
+      line-height: 1.55; margin-bottom: 48px;
+    }
+    .rotating-text-wrap {
+      height: 40px; overflow: hidden;
+      margin-bottom: 56px; position: relative;
+      max-width: 700px; width: 100%;
+    }
+    .rotating-text-item {
+      position: absolute; left: 0; right: 0;
+      font-size: var(--rotating-size);
+      color: rgba(255,255,255,0.62);
+      opacity: 0; transform: translateY(12px);
+      pointer-events: none; font-weight: 400; line-height: 1.5;
+    }
+    .rotating-text-item.visible {
+      opacity: 1; transform: translateY(0); pointer-events: auto;
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .rotating-text-item.clickable:hover {
+      color: rgba(255,255,255,0.9);
+      text-decoration: underline; text-underline-offset: 3px;
+      text-decoration-color: rgba(167,139,250,0.5);
+    }
+    .social-row { display: flex; gap: 14px; align-items: center; justify-content: center; }
+    .social-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition), box-shadow var(--transition);
+      color: rgba(255,255,255,0.55);
+    }
+    .social-btn:hover {
+      border-color: var(--accent); background: var(--accent-dim);
+      color: #fff; transform: translateY(-2px); box-shadow: 0 4px 22px var(--accent-glow);
+    }
+    .social-btn svg { width: 19px; height: 19px; }
+
+    /* ─── Shared page layout wrapper ────────────────────────────────── */
+    /* All inner page content uses .page-scroll-wrap which scrolls inside the fixed .page */
+    .page-scroll-wrap {
+      flex: 1; overflow-y: scroll; width: 100%;
+      scrollbar-width: none;
+    }
+    .page-scroll-wrap::-webkit-scrollbar { display: none; }
+
+    /* Consistent inner content container */
+    .page-inner {
+      max-width: 1060px; margin: 0 auto; width: 100%;
+      padding: 70px 52px 100px;
+      zoom: 1.25;
+    }
+    .page-heading {
+      font-size: clamp(34px, 4.5vw, 52px); font-weight: 700;
+      letter-spacing: -0.025em; margin-bottom: 10px;
+    }
+    .page-subheading { font-size: 17px; color: var(--text-dim); margin-bottom: 56px; }
+
+    /* ─── About Page ─────────────────────────────────────────────────── */
+    /* Everything in About scrolls together in one container — no sticky header splitting the page */
+    #about { flex-direction: column; }
+    .about-sidebar {
+      position: fixed; right: 24px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+      z-index: 50;
+    }
+    .spy-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--text-faint); cursor: pointer; flex-shrink: 0;
+      transition: width var(--transition), height var(--transition),
+                  background var(--transition), border-radius var(--transition);
+    }
+    .spy-dot.active { width: 11px; height: 32px; border-radius: 7px; background: var(--accent); }
+
+
+    .about-quicknav {
+      display: flex; gap: 0; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 48px;
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,13,15,0.88);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      border-bottom: 1px solid var(--border);
+      padding: 4px 0;
+      margin-left: -52px; margin-right: -52px;
+      padding-left: 52px; padding-right: 52px;
+    }
+    .about-qlink {
+      position: relative;
+      font-size: 15px; font-weight: 500; letter-spacing: 0.005em;
+      color: var(--text-dim);
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: color var(--transition);
+      user-select: none;
+    }
+    .about-qlink::after {
+      content: ''; position: absolute; bottom: 0; left: 20px; right: 20px;
+      height: 2px; background: var(--accent); border-radius: 2px;
+      transform: scaleX(0); transform-origin: center;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .about-qlink:hover { color: var(--text); }
+    .about-qlink.active { color: var(--text); }
+    .about-qlink.active::after { transform: scaleX(1); }
+
+
+    /* Scrollspy sidebar — sticky within the scroll column */
+
+    .about-section { padding-bottom: 80px; }
+    .about-section:last-child { padding-bottom: 28px; }
+
+    /* Section header */
+    .section-eyebrow {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 28px;
+    }
+    .section-eyebrow-icon {
+      width: 32px; height: 32px; border-radius: 9px;
+      background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); flex-shrink: 0;
+    }
+    .section-eyebrow-icon svg { width: 15px; height: 15px; }
+    .section-eyebrow-text {}
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--accent); opacity: 0.7;
+      line-height: 1;
+    }
+    .section-title {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+      color: var(--text); line-height: 1.2; margin-top: 3px;
+    }
+
+    /* Timeline for experience */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item {
+      display: grid; grid-template-columns: 20px 1fr;
+      gap: 0 22px; position: relative;
+    }
+    .timeline-item:not(:last-child) { padding-bottom: 36px; }
+    .timeline-track { display: flex; flex-direction: column; align-items: center; }
+    .timeline-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.18);
+      margin-top: 6px;
+    }
+    .timeline-line {
+      width: 1px; flex: 1; margin-top: 6px;
+      background: linear-gradient(to bottom, rgba(167,139,250,0.25), transparent);
+    }
+    .timeline-body { padding-bottom: 4px; }
+    .timeline-role {
+      font-size: 17px; font-weight: 650; color: var(--text);
+      letter-spacing: -0.01em; line-height: 1.3;
+    }
+    .timeline-org {
+      font-size: 14px; font-weight: 500; color: var(--accent);
+      margin-top: 3px; opacity: 0.85;
+    }
+    .timeline-meta {
+      display: flex; align-items: center; gap: 16px;
+      margin-top: 8px; margin-bottom: 14px;
+    }
+    .timeline-meta-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 13px; color: var(--text-faint);
+    }
+    .timeline-meta-item svg { width: 12px; height: 12px; opacity: 0.6; }
+    .timeline-desc {
+      font-size: 14.5px; color: var(--text-dim); line-height: 1.7;
+      border-left: 2px solid rgba(167,139,250,0.15); padding-left: 14px;
+    }
+
+    /* Education — timeline style matching experience */
+    .edu-degree { font-size: 17px; font-weight: 650; color: var(--text); letter-spacing: -0.01em; line-height: 1.3; }
+    .edu-school { font-size: 14px; font-weight: 500; color: var(--accent); margin-top: 3px; opacity: 0.85; }
+    .edu-meta { display: flex; align-items: center; gap: 16px; margin-top: 8px; margin-bottom: 14px; }
+    .edu-gpa-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 700; color: var(--accent);
+      background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 5px; padding: 3px 9px; letter-spacing: 0.02em;
+    }
+    .edu-coursework { border-left: 2px solid rgba(167,139,250,0.15); padding-left: 14px; }
+    .edu-coursework-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-faint); margin-bottom: 10px;
+    }
+    .edu-coursework-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .edu-chip {
+      font-size: 12.5px; color: var(--text-dim);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 5px; padding: 4px 10px;
+    }
+
+    /* References — blockquote layout */
+    .ref-list { display: flex; flex-direction: column; gap: 0; }
+    .ref-block {
+      padding: 32px 0 32px 28px;
+      border-left: 2px solid rgba(167,139,250,0.3);
+      display: flex; flex-direction: column; gap: 20px;
+      transition: border-color var(--transition);
+    }
+    .ref-block + .ref-block { border-top: 1px solid var(--border); margin-top: 0; }
+    .ref-block:hover { border-left-color: var(--accent); }
+    .ref-quote-mark {
+      font-size: 48px; line-height: 1; color: var(--accent); opacity: 0.4;
+      font-family: Georgia, serif; user-select: none;
+      display: block; margin-bottom: -20px;
+    }
+    .ref-quote-text {
+      font-size: 15.5px; line-height: 1.8; color: rgba(255,255,255,0.82);
+      font-style: italic; font-weight: 400; max-width: 640px;
+    }
+    .ref-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 14px;
+    }
+    .ref-attr { display: flex; flex-direction: column; gap: 2px; }
+    .ref-name { font-size: 13.5px; font-weight: 650; color: var(--text); }
+    .ref-meta { font-size: 12px; color: var(--text-faint); }
+    .ref-meta span { color: var(--accent); opacity: 0.85; }
+    .ref-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .ref-btn {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      font-size: 12px; font-weight: 600; padding: 7px 14px;
+      border-radius: 7px; cursor: pointer; text-decoration: none; white-space: nowrap;
+      transition: background var(--transition), color var(--transition);
+    }
+    .ref-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .ref-btn-view {
+      background: var(--accent-dim); color: var(--accent);
+      border: 1px solid rgba(167,139,250,0.25);
+    }
+    .ref-btn-view:hover { background: rgba(167,139,250,0.25); }
+    .ref-btn-dl {
+      background: rgba(255,255,255,0.04); color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .ref-btn-dl:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+    /* PDF lightbox */
+    .pdf-overlay {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(0,0,0,0.92); backdrop-filter: blur(12px);
+      display: none; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.25s ease;
+    }
+    .pdf-overlay.open { display: flex; }
+    .pdf-overlay.visible { opacity: 1; }
+    .pdf-viewer-wrap {
+      position: relative; width: 100%; height: 100%;
+      display: flex; align-items: flex-start; justify-content: center;
+      overflow-y: auto; overflow-x: hidden;
+      padding: 48px 24px 64px;
+    }
+    .pdf-canvas-stack {
+      display: flex; flex-direction: column; gap: 16px;
+      align-items: center;
+    }
+    .pdf-canvas-stack canvas {
+      display: block;
+      border-radius: 4px;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+    }
+    /* Floating controls */
+    .pdf-controls {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      z-index: 910;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(20,20,24,0.85); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 40px; padding: 8px 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      opacity: 0; transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+    .pdf-overlay.visible .pdf-controls { opacity: 1; pointer-events: auto; }
+    .pdf-ctrl-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.7); cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+      flex-shrink: 0;
+    }
+    .pdf-ctrl-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .pdf-ctrl-btn svg { width: 18px; height: 18px; }
+    .pdf-ctrl-divider {
+      width: 1px; height: 20px; background: rgba(255,255,255,0.12); margin: 0 2px;
+    }
+    .pdf-ctrl-close svg { width: 16px; height: 16px; }
+    /* Close hit zone top-right */
+    .pdf-close-corner {
+      position: fixed; top: 24px; right: 28px; z-index: 910;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.4); cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+      opacity: 0; transition: opacity 0.25s ease, background 0.18s ease, color 0.18s ease;
+      pointer-events: none;
+    }
+    .pdf-overlay.visible .pdf-close-corner { opacity: 1; pointer-events: auto; }
+    .pdf-close-corner:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .pdf-close-corner svg { width: 18px; height: 18px; }
+    /* Loading state */
+    .pdf-loading {
+      color: rgba(255,255,255,0.35); font-size: 14px;
+      display: flex; align-items: center; gap: 10px;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    }
+
+    /* Skills */
+    .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .skill-group {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 20px 22px;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .skill-group:hover { border-color: rgba(167,139,250,0.18); background: var(--surface-2); }
+    .skill-group-header { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+    .skill-group-icon {
+      width: 26px; height: 26px; border-radius: 7px;
+      background: var(--accent-dim); display: flex; align-items: center;
+      justify-content: center; color: var(--accent); flex-shrink: 0;
+    }
+    .skill-group-icon svg { width: 13px; height: 13px; }
+    .skill-group-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim);
+    }
+    .skill-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip {
+      font-size: 13px; font-weight: 500; color: var(--text-dim);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 5px; padding: 4px 10px;
+      transition: color var(--transition), border-color var(--transition), background var(--transition);
+    }
+    .chip:hover { color: var(--text); border-color: rgba(167,139,250,0.3); background: var(--accent-dim); }
+
+    /* ─── Projects Page ──────────────────────────────────────────────── */
+    #projects { flex-direction: column; }
+    .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
+    .project-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px;
+      display: flex; flex-direction: column; gap: 14px;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+    .project-card:hover { border-color: rgba(167,139,250,0.25); background: var(--surface-2); transform: translateY(-3px); box-shadow: 0 10px 36px rgba(0,0,0,0.4); }
+    .project-tag  { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); opacity: 0.8; }
+    .project-title { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+    .project-desc  { font-size: 14.5px; color: var(--text-dim); line-height: 1.65; flex: 1; }
+    .project-footer { display: flex; gap: 8px; flex-wrap: wrap; }
+    .project-chip { font-size: 12.5px; font-weight: 500; color: var(--text-faint); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; }
+    .project-placeholder-note { font-size: 14px; color: var(--text-faint); border: 1px dashed var(--border); border-radius: var(--radius); padding: 44px 32px; text-align: center; line-height: 1.7; }
+
+    /* ─── Contact Page ───────────────────────────────────────────────── */
+    #contact { flex-direction: column; }
+    .contact-links {
+      display: flex; flex-direction: column; width: 100%; max-width: 680px; gap: 0; margin: 0 auto;
+    }
+    .contact-link-card {
+      display: flex; align-items: center; gap: 18px;
+      padding: 28px 0; border-bottom: 1px solid var(--border);
+      text-decoration: none; cursor: pointer; color: inherit;
+      transition: gap var(--transition);
+    }
+    .contact-link-card:first-child { border-top: 1px solid var(--border); }
+    .contact-link-card:hover { gap: 24px; }
+    .contact-link-card:hover .contact-link-label { color: var(--text); }
+    .contact-link-card:hover .contact-link-arrow { color: var(--accent); }
+    .contact-link-icon { color: var(--accent); flex-shrink: 0; }
+    .contact-link-icon svg { width: 22px; height: 22px; display: block; }
+    .contact-link-text { flex: 1; text-align: left; min-width: 0; }
+    .contact-link-label { font-size: 18px; font-weight: 600; color: var(--text-dim); transition: color var(--transition); }
+    .contact-link-value { font-size: 14px; color: var(--text-faint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .contact-link-arrow { color: var(--text-faint); flex-shrink: 0; transition: color var(--transition); margin-left: auto; }
+    .contact-link-arrow svg { width: 20px; height: 20px; display: block; }
+
+    /* ─── Page transition ────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .page.active > * { animation: fadeUp 0.38s cubic-bezier(0.4,0,0.2,1) both; }
+
+
+    /* ─── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      nav { padding: 0 22px; }
+      .nav-tab { padding: 6px 10px; font-size: 13.5px; }
+      .nav-right { gap: 14px; }
+      .page-inner { padding: 48px 22px 72px; }
+      .about-quicknav { padding: 16px 22px 0; }
+      .contact-links { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-logo" data-page="home">S.</div>
+  <div class="nav-right">
+    <div class="nav-tabs">
+      <div class="nav-tab active" data-page="home">Home</div>
+      <div class="nav-tab" data-page="about">About Me</div>
+      <div class="nav-tab" data-page="projects">Projects</div>
+      <div class="nav-tab" data-page="contact">Contact</div>
+    </div>
+    <button class="pause-btn" id="pause-btn" aria-label="Pause animation">
+      <svg id="pause-icon" viewBox="0 0 12 12" fill="currentColor">
+        <rect x="1.5" y="1" width="3.5" height="10" rx="1"/>
+        <rect x="7" y="1" width="3.5" height="10" rx="1"/>
+      </svg>
+      <svg id="play-icon" viewBox="0 0 12 12" fill="currentColor" style="display:none;">
+        <path d="M2 1.5 L10 6 L2 10.5 Z"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ─── HOME ──────────────────────────────────────────────── -->
+<section id="home" class="page active">
+  <h1 class="hero-name" id="txt-hero-name">Hi, I'm Sumalee</h1>
+  <p class="hero-tagline" id="txt-hero-tagline">
+    I'm a data scientist focused on machine learning, predictive modeling, and software development.
+    I build practical, data-driven tools that turn complex problems into usable systems.
+  </p>
+  <div class="rotating-text-wrap" id="rotating-wrap"></div>
+  <div class="social-row">
+    <a class="social-btn" id="link-linkedin" href="https://www.linkedin.com/in/sumalee-rodolph/" target="_blank" rel="noopener" aria-label="LinkedIn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+        <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+      </svg>
+    </a>
+    <a class="social-btn" id="link-github" href="https://github.com/sumaleee" target="_blank" rel="noopener" aria-label="GitHub">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+      </svg>
+    </a>
+    <a class="social-btn" id="link-email" href="mailto:sumalee@rodolph.us" aria-label="Email">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<!-- ─── ABOUT ──────────────────────────────────────────────── -->
+<section id="about" class="page">
+  <!-- Single scrollable column — heading, quicknav, and all sections scroll together -->
+  <div class="page-scroll-wrap" id="about-content">
+    <div class="page-inner">
+      <h2 class="page-heading" id="txt-about-heading">About Me</h2>
+      <p class="page-subheading" id="txt-about-subheading">Background, experience, and the skills behind the work.</p>
+
+      <div class="about-quicknav">
+        <div class="about-qlink" data-target="exp">Experience</div>
+        <div class="about-qlink" data-target="edu">Education</div>
+        <div class="about-qlink" data-target="skills">Skills</div>
+        <div class="about-qlink" data-target="recs">References</div>
+      </div>
+
+        <div class="about-section" id="sec-exp">
+          <div class="section-eyebrow">
+            <div class="section-eyebrow-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            </div>
+            <div class="section-eyebrow-text">
+              <div class="section-label">01</div>
+              <div class="section-title">Experience</div>
+            </div>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-track">
+                <div class="timeline-dot"></div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-body">
+                <div class="timeline-role">AI & Data Scientist <span style="font-weight:400;color:var(--text-faint);">(Part-Time)</span></div>
+                <div class="timeline-org">One Source Partners LLC</div>
+                <div class="timeline-meta">
+                  <span class="timeline-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    May 2025 – Present
+                  </span>
+                  <span class="timeline-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Remote
+                  </span>
+                </div>
+                <div class="timeline-desc">Built scoring models, ranked acquisition datasets, and multi-source data pipelines for client-facing decision support and targeting workflows.</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-track">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-body">
+                <div class="timeline-role">Independent Mathematics Tutor</div>
+                <div class="timeline-org">Self-Employed</div>
+                <div class="timeline-meta">
+                  <span class="timeline-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    May 2025 – Present
+                  </span>
+                  <span class="timeline-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Fort Worth / Remote
+                  </span>
+                </div>
+                <div class="timeline-desc">Tutor high school and university students in Calculus, Precalculus, and Advanced Algebra, with work that later informed the design of Luden, a system for more individualized lesson planning.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-section" id="sec-edu">
+          <div class="section-eyebrow">
+            <div class="section-eyebrow-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
+            <div class="section-eyebrow-text">
+              <div class="section-label">02</div>
+              <div class="section-title">Education</div>
+            </div>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-track">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-body">
+                <div class="timeline-role">B.S. in Data Science</div>
+                <div class="timeline-org">Texas Christian University</div>
+                <div class="timeline-meta">
+                  <span class="timeline-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    2022 – 2026
+                  </span>
+                  <span class="timeline-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Fort Worth, TX
+                  </span>
+                  <span class="edu-gpa-badge">GPA 3.61</span>
+                </div>
+                <div class="edu-coursework">
+                  <div class="edu-coursework-label">Coursework</div>
+                  <div class="edu-coursework-chips">
+                    <span class="edu-chip">Predictive Modeling</span>
+                    <span class="edu-chip">Machine Learning</span>
+                    <span class="edu-chip">Deep Learning</span>
+                    <span class="edu-chip">Artificial Intelligence</span>
+                    <span class="edu-chip">Software Engineering</span>
+                    <span class="edu-chip">Python for Data Analytics</span>
+                    <span class="edu-chip">Analysis of Algorithms</span>
+                    <span class="edu-chip">Data Structures</span>
+                    <span class="edu-chip">Database Systems</span>
+                    <span class="edu-chip">Linear Algebra</span>
+                  </div>
+                </div>
+                <div class="edu-coursework" style="margin-top:18px;">
+                  <div class="edu-coursework-label">Honors</div>
+                  <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                    <div class="contact-link-card" style="cursor:pointer; padding:12px 16px;" onclick="openPdf(this)" data-src="Rodolph, S. Deans Cert S25.pdf">
+                      <div class="contact-link-icon" style="width:30px;height:30px;border-radius:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                      <div class="contact-link-text">
+                        <div class="contact-link-label">Dean's List</div>
+                        <div class="contact-link-value">Spring 2025 — Texas Christian University</div>
+                      </div>
+                      <div class="contact-link-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                    </div>
+                    <div class="contact-link-card" style="cursor:pointer; padding:12px 16px;" onclick="openPdf(this)" data-src="Rodolph F25 Dean's Cert 52.pdf">
+                      <div class="contact-link-icon" style="width:30px;height:30px;border-radius:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                      <div class="contact-link-text">
+                        <div class="contact-link-label">Dean's List</div>
+                        <div class="contact-link-value">Fall 2025 — Texas Christian University</div>
+                      </div>
+                      <div class="contact-link-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-section" id="sec-skills">
+          <div class="section-eyebrow">
+            <div class="section-eyebrow-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="section-eyebrow-text">
+              <div class="section-label">03</div>
+              <div class="section-title">Skills</div>
+            </div>
+          </div>
+          <div class="skills-grid">
+            <div class="skill-group">
+              <div class="skill-group-header">
+                <div class="skill-group-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </div>
+                <div class="skill-group-label">Languages</div>
+              </div>
+              <div class="skill-chips"><span class="chip">Python</span><span class="chip">JavaScript</span><span class="chip">SQL</span><span class="chip">R</span><span class="chip">Java</span></div>
+            </div>
+            <div class="skill-group">
+              <div class="skill-group-header">
+                <div class="skill-group-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </div>
+                <div class="skill-group-label">Libraries / Frameworks</div>
+              </div>
+              <div class="skill-chips"><span class="chip">PyTorch</span><span class="chip">scikit-learn</span><span class="chip">pandas</span><span class="chip">NumPy</span><span class="chip">statsmodels</span><span class="chip">Flask</span><span class="chip">CesiumJS</span></div>
+            </div>
+            <div class="skill-group">
+              <div class="skill-group-header">
+                <div class="skill-group-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                </div>
+                <div class="skill-group-label">Tools</div>
+              </div>
+              <div class="skill-chips"><span class="chip">Git</span><span class="chip">GitHub</span><span class="chip">Linux / Unix</span><span class="chip">Jupyter Notebook</span></div>
+            </div>
+            <div class="skill-group">
+              <div class="skill-group-header">
+                <div class="skill-group-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <div class="skill-group-label">Methods</div>
+              </div>
+              <div class="skill-chips"><span class="chip">Feature Engineering</span><span class="chip">API Integration</span><span class="chip">Retrieval Systems</span><span class="chip">AST Parsing</span><span class="chip">Predictive Modeling</span><span class="chip">Data Processing</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-section" id="sec-recs">
+          <div class="section-eyebrow">
+            <div class="section-eyebrow-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="section-eyebrow-text">
+              <div class="section-label">04</div>
+              <div class="section-title">References</div>
+            </div>
+          </div>
+          <div class="ref-list">
+            <div class="ref-block">
+              <span class="ref-quote-mark">&ldquo;</span>
+              <p class="ref-quote-text">Her creative talents and problem-solving skills surpassed those of our seasoned team members. She requires little to no supervision and meets all of her aggressive client deadlines on time.</p>
+              <div class="ref-footer">
+                <div class="ref-attr">
+                  <div class="ref-name">Robert Samuels</div>
+                  <div class="ref-meta"><span>CEO</span> &middot; One Source Partners, LLC</div>
+                </div>
+                <div class="ref-actions">
+                  <span class="ref-btn ref-btn-view" onclick="openPdf(this)" data-src="OSP Reference Letter  - Sumalee.pdf">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Full letter
+                  </span>
+                  <a class="ref-btn ref-btn-dl" href="OSP Reference Letter  - Sumalee.pdf" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="ref-block">
+              <span class="ref-quote-mark">&ldquo;</span>
+              <p class="ref-quote-text">Her modelling completely changed the client's sales channel go-to-market strategy &amp; execution strategy, methods and results.</p>
+              <div class="ref-footer">
+                <div class="ref-attr">
+                  <div class="ref-name">Oguz Algan</div>
+                  <div class="ref-meta"><span>Managing Partner, CFO</span> &middot; Candorlight, LLC / One Source Partners, LLC</div>
+                </div>
+                <div class="ref-actions">
+                  <span class="ref-btn ref-btn-view" onclick="openPdf(this)" data-src="Sumalee Rodolph - Oguz Recommendation Letter.pdf">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Full letter
+                  </span>
+                  <a class="ref-btn ref-btn-dl" href="Sumalee Rodolph - Oguz Recommendation Letter.pdf" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end page-inner -->
+    </div><!-- end page-scroll-wrap -->
+    <div class="about-sidebar">
+      <div class="spy-dot active" data-section="sec-exp"   title="Experience"></div>
+      <div class="spy-dot"        data-section="sec-edu"    title="Education"></div>
+      <div class="spy-dot"        data-section="sec-skills" title="Skills"></div>
+      <div class="spy-dot"        data-section="sec-recs"   title="References"></div>
+    </div>
+</section>
+
+<!-- ─── PROJECTS ──────────────────────────────────────────────── -->
+<section id="projects" class="page">
+  <div class="page-scroll-wrap">
+    <div class="page-inner">
+      <h2 class="page-heading" id="txt-projects-heading">Projects</h2>
+      <p class="page-subheading" id="txt-projects-subheading">Selected work in machine learning, predictive modeling, and software development.</p>
+      <div class="project-grid">
+        <a href="https://github.com/sumaleee/Luden" target="_blank" rel="noopener" class="project-card" style="grid-column: 1 / -1; flex-direction: row; gap: 32px; align-items: flex-start; text-decoration: none; color: inherit; cursor: pointer;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="project-tag">Featured</div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:var(--text-faint);flex-shrink:0;"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            </div>
+            <div class="project-title" id="txt-proj0-title" style="font-size:22px; margin-top:10px;">Luden</div>
+            <div class="project-desc" id="txt-proj0-desc" style="margin-top:12px;">A mathematical parsing pipeline designed to generate structurally similar practice problems. It converts plaintext and LaTeX expressions into an Abstract Syntax Tree (AST) to isolate the formula's structural invariance, then retrieves algorithmically identical problems from a custom, web-scraped database.</div>
+            <div class="project-footer" style="margin-top:18px;"><span class="project-chip" id="txt-proj0-chip1">Python</span><span class="project-chip" id="txt-proj0-chip2">AST Parsing</span><span class="project-chip" id="txt-proj0-chip3">Web Scraping</span><span class="project-chip" id="txt-proj0-chip4">OCR</span><span class="project-chip">Flask</span><span class="project-chip">HTML</span></div>
+          </div>
+          <div style="width:200px; height:130px; border-radius:10px; border:1px solid var(--border); flex-shrink:0; overflow:hidden;">
+            <img src="precalculus-course_105189_large.jpg" alt="Luden preview" style="width:100%; height:100%; object-fit:cover; object-position:center;">
+          </div>
+        </a>
+        <div class="project-card" style="grid-column: 1 / -1; flex-direction: row; gap: 32px; align-items: flex-start;">
+          <div style="flex:1;">
+            <div class="project-tag">Software</div>
+            <div class="project-title" id="txt-proj3-title" style="font-size:22px; margin-top:10px;">Brazos 3D Weather Visualization</div>
+            <div class="project-desc" id="txt-proj3-desc" style="margin-top:12px;">A 3D geospatial visualization module built for a proprietary senior design safety system. Using an open-source CesiumJS environment, it parses METAR strings and flight data to dynamically render accurate, real-time weather conditions within a 3D interface.</div>
+            <div class="project-footer" style="margin-top:18px;"><span class="project-chip" id="txt-proj3-chip1">CesiumJS</span><span class="project-chip" id="txt-proj3-chip2">JavaScript</span><span class="project-chip" id="txt-proj3-chip3">HTML</span></div>
+          </div>
+          <div style="width:200px; height:130px; border-radius:10px; border:1px solid var(--border); flex-shrink:0; overflow:hidden;">
+            <img src="59b496e4-5cbf-41eb-96c4-4a6396fba1bc_globe (1).png" alt="Brazos preview" style="width:100%; height:100%; object-fit:cover; object-position:center;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CONTACT ──────────────────────────────────────────────── -->
+<section id="contact" class="page">
+  <div class="page-scroll-wrap">
+    <div class="page-inner">
+      <h2 class="page-heading" id="txt-contact-heading">Contact</h2>
+      <p class="page-subheading" id="txt-contact-subheading">I'm currently open to new opportunities in data science and machine learning. Feel free to reach out!</p>
+      <div class="contact-links">
+        <a class="contact-link-card" id="link-linkedin-contact" href="https://www.linkedin.com/in/sumalee-rodolph/" target="_blank" rel="noopener">
+          <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div>
+          <div class="contact-link-text">
+            <div class="contact-link-label">LinkedIn</div>
+            <div class="contact-link-value" id="txt-contact-linkedin">linkedin.com/in/sumalee-rodolph</div>
+          </div>
+          <div class="contact-link-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </a>
+        <a class="contact-link-card" id="link-github-contact" href="https://github.com/sumaleee" target="_blank" rel="noopener">
+          <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></div>
+          <div class="contact-link-text">
+            <div class="contact-link-label">GitHub</div>
+            <div class="contact-link-value" id="txt-contact-github">github.com/sumaleee</div>
+          </div>
+          <div class="contact-link-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </a>
+        <a class="contact-link-card" id="link-email-contact" href="mailto:sumalee@rodolph.us">
+          <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div class="contact-link-text">
+            <div class="contact-link-label">Email</div>
+            <div class="contact-link-value" id="txt-contact-email">sumalee@rodolph.us</div>
+          </div>
+          <div class="contact-link-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </a>
+        <div class="contact-link-card" onclick="openPdf(this)" data-src="sumalee_cv.pdf">
+          <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div class="contact-link-text">
+            <div class="contact-link-label">Resume</div>
+            <div class="contact-link-value">View CV</div>
+          </div>
+          <div class="contact-link-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<script>
+/* ─────────────────────────────────────────────────────────────────────
+   NEURAL NETWORK CANVAS ANIMATION
+   Structured layered graph with proper ML node labels:
+   — Input layer: x₁, x₂, … xₙ
+   — Hidden layers: σ (sigmoid), tanh, ReLU, f (activation)
+   — Weights on edges: w₁, w₂… (sparse)
+   — Bias nodes: b
+   — Output: Y
+   — Only nodes with edges are shown (no isolated floaters)
+   — Slowed down base speed
+───────────────────────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, paused = false, rafId = null;
+
+  /* ── Layout constants ── */
+  const LAYER_COUNT  = 5;
+  const NODES_PER    = 14;     // fewer nodes per layer so connections are denser
+  const CONNECT_DIST = 170;
+  const MOUSE_DIST   = 165;
+  const BASE_SPEED   = 0.12;   // slowed down from 0.22
+  const REPULSE_R    = 80;
+  const REPULSE_F    = 0.013;
+
+  /* ── Label pools by layer role ── */
+  const INPUT_LABELS  = ['x₁','x₂','x₃','x₄','x₅','x₆'];
+  const HIDDEN_LABELS = ['σ','tanh','ReLU','f','b','σ','tanh'];  // σ/tanh weighted higher
+  const OUTPUT_LABELS = ['Y','ŷ'];
+  const WEIGHT_LABELS = ['w₁','w₂','w₃','b'];  // shown on edges, sparse
+
+  let nodes = [], pulses = [];
+  const mouse = { x: -9999, y: -9999 };
+
+  /* ── Build nodes ensuring every node has at least one potential edge ── */
+  function initNodes() {
+    nodes = [];
+    for (let layer = 0; layer < LAYER_COUNT; layer++) {
+      const xBand = W * (layer + 1) / (LAYER_COUNT + 1);
+      // Determine label pool for this layer
+      const labelPool = layer === 0
+        ? INPUT_LABELS
+        : layer === LAYER_COUNT - 1
+          ? OUTPUT_LABELS
+          : HIDDEN_LABELS;
+
+      for (let i = 0; i < NODES_PER; i++) {
+        // Spread nodes in the Y axis evenly with jitter
+        const ySpread = H * 0.8;
+        const yBase   = (H - ySpread) / 2 + (i / (NODES_PER - 1)) * ySpread;
+        nodes.push({
+          x:      xBand + (Math.random() - 0.5) * W * 0.10,
+          y:      yBase  + (Math.random() - 0.5) * ySpread * 0.25,
+          vx:     (Math.random() - 0.5) * BASE_SPEED,
+          vy:     (Math.random() - 0.5) * BASE_SPEED,
+          r:      Math.random() * 1.6 + 1.6,
+          layer:  layer,
+          label:  null,   // assigned after all nodes built — only ~5-6 total
+          edgeLabel: null,
+          glow: 0,
+        });
+      }
+    }
+
+    // Easter-egg labels: pick exactly 5-6 nodes across the whole network
+    const labelCount = 5 + Math.floor(Math.random() * 2); // 5 or 6
+    const picked = new Set();
+    while (picked.size < labelCount) {
+      const idx = Math.floor(Math.random() * nodes.length);
+      picked.add(idx);
+    }
+    picked.forEach(idx => {
+      const n = nodes[idx];
+      const pool = n.layer === 0 ? INPUT_LABELS
+                 : n.layer === LAYER_COUNT - 1 ? OUTPUT_LABELS
+                 : HIDDEN_LABELS;
+      n.label = pool[Math.floor(Math.random() * pool.length)];
+    });
+
+    // Sparse edge labels: 2-3 total across all edges
+    const edgeLabelCount = 2 + Math.floor(Math.random() * 2);
+    const edgePicked = new Set();
+    while (edgePicked.size < edgeLabelCount) {
+      edgePicked.add(Math.floor(Math.random() * nodes.length));
+    }
+    edgePicked.forEach(idx => {
+      nodes[idx].edgeLabel = WEIGHT_LABELS[Math.floor(Math.random() * WEIGHT_LABELS.length)];
+    });
+  }
+
+  /* ── Only pulse along actual forward edges ── */
+  function maybePulse() {
+    if (pulses.length > 18 || Math.random() > 0.025) return;
+    const src = nodes.filter(n => n.layer < LAYER_COUNT - 1);
+    if (!src.length) return;
+    const a = src[Math.floor(Math.random() * src.length)];
+    const fwd = nodes.filter(n =>
+      n.layer === a.layer + 1 &&
+      Math.hypot(n.x - a.x, n.y - a.y) < CONNECT_DIST
+    );
+    if (!fwd.length) return;
+    const b = fwd[Math.floor(Math.random() * fwd.length)];
+    pulses.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, t: 0,
+      speed: 0.005 + Math.random() * 0.008 });  // slower pulses too
+  }
+
+  /* ── Arrowhead ── */
+  function drawArrow(x1, y1, x2, y2, alpha) {
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    if (len < 28) return;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const mx = x1 + (x2 - x1) * 0.68;
+    const my = y1 + (y2 - y1) * 0.68;
+    const as = 9;
+    ctx.beginPath();
+    ctx.moveTo(mx + as * Math.cos(angle), my + as * Math.sin(angle));
+    ctx.lineTo(mx - as * Math.cos(angle - 0.46), my - as * Math.sin(angle - 0.46));
+    ctx.lineTo(mx - as * 0.35 * Math.cos(angle), my - as * 0.35 * Math.sin(angle));
+    ctx.lineTo(mx - as * Math.cos(angle + 0.46), my - as * Math.sin(angle + 0.46));
+    ctx.closePath();
+    ctx.fillStyle = `rgba(167,139,250,${alpha * 0.85})`;
+    ctx.fill();
+  }
+
+  /* ── Main draw ── */
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    if (paused) return;
+
+    maybePulse();
+
+    /* Move nodes */
+    for (const n of nodes) {
+      n.x += n.vx; n.y += n.vy;
+      // Soft boundary — push back from edges instead of wrapping
+      const margin = 40;
+      if (n.x < margin)   n.vx += 0.008;
+      if (n.x > W-margin) n.vx -= 0.008;
+      if (n.y < margin)   n.vy += 0.008;
+      if (n.y > H-margin) n.vy -= 0.008;
+      // Speed cap
+      const spd = Math.hypot(n.vx, n.vy);
+      if (spd > BASE_SPEED * 2.8) { n.vx = n.vx/spd*BASE_SPEED*2.8; n.vy = n.vy/spd*BASE_SPEED*2.8; }
+      // Mouse repulsion
+      const dx = n.x - mouse.x, dy = n.y - mouse.y;
+      const d  = Math.hypot(dx, dy);
+      if (d < REPULSE_R && d > 0) { n.vx += (dx/d)*REPULSE_F; n.vy += (dy/d)*REPULSE_F; }
+      n.glow = Math.max(0, 1 - d / MOUSE_DIST);
+    }
+
+    /* ── Edges ── only between adjacent layers within CONNECT_DIST ── */
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const ld = Math.abs(a.layer - b.layer);
+        if (ld !== 1) continue;           // strictly adjacent layers only
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d > CONNECT_DIST) continue;
+
+        const alpha = (1 - d/CONNECT_DIST) * 0.30;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(155,130,235,${alpha})`;
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+
+        const [src, dst] = a.layer < b.layer ? [a,b] : [b,a];
+        drawArrow(src.x, src.y, dst.x, dst.y, alpha * 1.9);
+
+        // Sparse edge weight label — only if source node has one and nodes are close enough
+        if (src.edgeLabel && d < CONNECT_DIST * 0.6) {
+          const mx2 = (src.x + dst.x) * 0.5;
+          const my2 = (src.y + dst.y) * 0.5;
+          ctx.font = '9px monospace';
+          ctx.fillStyle = `rgba(190,170,255,${alpha * 2.2})`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(src.edgeLabel, mx2 + 6, my2 - 6);
+        }
+      }
+    }
+
+    /* Mouse-to-node lines */
+    for (const n of nodes) {
+      if (n.glow <= 0) continue;
+      ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(mouse.x, mouse.y);
+      ctx.strokeStyle = `rgba(167,139,250,${n.glow*0.45})`; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    /* Pulses */
+    pulses = pulses.filter(p => p.t <= 1);
+    for (const p of pulses) {
+      p.t += p.speed;
+      const px = p.ax + (p.bx - p.ax)*p.t, py = p.ay + (p.by - p.ay)*p.t;
+      const fade = Math.sin(p.t * Math.PI);
+      ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(210,190,255,${fade*0.95})`; ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, 5.5, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(167,139,250,${fade*0.2})`; ctx.fill();
+    }
+
+    /* Nodes */
+    for (const n of nodes) {
+      const g = n.glow;
+      if (g > 0.04) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 5 + g*7, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(167,139,250,${g*0.12})`; ctx.fill();
+      }
+      const hue  = 255 - n.layer * 15;  // purple-blue gradient across layers
+      const sat  = 40 + n.layer * 5;
+      const lite = 62 + g * 22;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r + g*1.5, 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${hue},${sat}%,${lite}%,${0.5+g*0.45})`; ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r + g*1.5 + 1.2, 0, Math.PI*2);
+      ctx.strokeStyle = `rgba(200,185,255,${0.22+g*0.38})`; ctx.lineWidth = 0.8; ctx.stroke();
+
+      /* Node label — only appears on hover proximity */
+      if (n.label && g > 0.25) {
+        const sz = 9 + g * 4;
+        ctx.font = `${sz}px monospace`;
+        ctx.fillStyle = `rgba(220,210,255,${g * 0.95})`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(n.label, n.x, n.y - n.r - 10);
+      }
+    }
+
+    rafId = requestAnimationFrame(draw);
+  }
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    nodes = []; initNodes();
+  }
+
+  window.toggleAnimation = function () {
+    paused = !paused;
+    if (!paused) rafId = requestAnimationFrame(draw);
+    else { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, W, H); }
+    return paused;
+  };
+
+  // Dim/brighten canvas when switching pages
+  window.setCanvasDim = function (isHome) {
+    canvas.style.opacity = isHome ? '' : '0.18';
+    if (!isHome) { mouse.x = -9999; mouse.y = -9999; }
+  };
+
+  document.addEventListener('mousemove', e => {
+    // Only track mouse on home page
+    if (!document.getElementById('home')?.classList.contains('active')) return;
+    mouse.x = e.clientX; mouse.y = e.clientY;
+  });
+  document.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+  window.addEventListener('resize', resize);
+  resize(); rafId = requestAnimationFrame(draw);
+})();
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   PAGE SWITCHER
+───────────────────────────────────────────────────────────────────── */
+(function () {
+  const pages = document.querySelectorAll('.page');
+  const tabs  = document.querySelectorAll('.nav-tab');
+
+  function showPage(id) {
+    pages.forEach(p => p.classList.toggle('active', p.id === id));
+    tabs.forEach(t  => t.classList.toggle('active', t.dataset.page === id));
+    history.pushState(null, '', '#' + id);
+    if (id !== 'about') {
+      const ac = document.getElementById('about-content');
+      if (ac) ac.scrollTop = 0;
+    }
+    if (window.setCanvasDim) window.setCanvasDim(id === 'home');
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => showPage(t.dataset.page)));
+  document.querySelector('.nav-logo').addEventListener('click', () => showPage('home'));
+  const hash = location.hash.replace('#', '');
+  const startPage = (hash && document.getElementById(hash)) ? hash : 'home';
+  showPage(startPage);
+  window.showPage = showPage;
+})();
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   HIDE-ON-SCROLL NAV
+───────────────────────────────────────────────────────────────────── */
+(function () {
+  const nav = document.querySelector('nav');
+  let lastY = 0;
+
+  function onScroll(e) {
+    const y = e.target.scrollTop;
+    const delta = y - lastY;
+    // Hide when scrolling down past 80px, show when scrolling up
+    if (delta > 4 && y > 80) nav.classList.add('nav-hidden');
+    else if (delta < -4) nav.classList.remove('nav-hidden');
+    lastY = y;
+  }
+
+  // Attach to all scrollable page containers
+  document.querySelectorAll('.page-scroll-wrap').forEach(el => {
+    el.addEventListener('scroll', onScroll, { passive: true });
+  });
+
+  // Always show nav when switching pages
+  const _orig = window.showPage;
+  window.showPage = function (id) {
+    nav.classList.remove('nav-hidden');
+    lastY = 0;
+    _orig(id);
+  };
+})();
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   PAUSE BUTTON
+───────────────────────────────────────────────────────────────────── */
+(function () {
+  const btn       = document.getElementById('pause-btn');
+  const pauseIcon = document.getElementById('pause-icon');
+  const playIcon  = document.getElementById('play-icon');
+  btn.addEventListener('click', () => {
+    const nowPaused = window.toggleAnimation();
+    document.body.classList.toggle('anim-paused', nowPaused);
+    pauseIcon.style.display = nowPaused ? 'none' : '';
+    playIcon.style.display  = nowPaused ? ''     : 'none';
+  });
+})();
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   ROTATING TEXT
+───────────────────────────────────────────────────────────────────── */
+(function () {
+  const items = [
+    { text: 'Explore my projects and technical work.',                         page: 'projects' },
+    { text: "Take a look at what I'm building.",                               page: 'projects' },
+    { text: 'See selected work in machine learning and software.',              page: 'projects' },
+    { text: 'Find me on LinkedIn.',                                            url: 'https://www.linkedin.com/in/sumalee-rodolph/' },
+    { text: 'Or find me on GitHub.',                                              url: 'https://github.com/sumaleee' },
+    { text: 'Start with projects to see my work in action.',                   page: 'projects' },
+    { text: 'Currently building Luden and other practical tools.',             page: 'projects' },
+    { text: 'Interested in my background? Start here.',                        page: 'about'    },
+    { text: 'View the projects behind the title.',                             page: 'projects' },
+    { text: 'Explore the work, tools, and ideas behind my portfolio.',         page: 'about'    },
+    { text: 'See how I turn technical ideas into usable systems.',             page: 'projects' },
+  ];
+  const wrap = document.getElementById('rotating-wrap');
+  let current = 0;
+  items.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'rotating-text-item' + (i === 0 ? ' visible' : '');
+    el.textContent = item.text;
+    if (item.page) {
+      el.classList.add('clickable');
+      el.addEventListener('click', () => window.showPage(item.page));
+      el.style.cursor = 'pointer';
+    } else if (item.url) {
+      el.classList.add('clickable');
+      el.addEventListener('click', () => window.open(item.url, '_blank', 'noopener'));
+      el.style.cursor = 'pointer';
+    }
+    wrap.appendChild(el);
+  });
+  const els = wrap.querySelectorAll('.rotating-text-item');
+  function rotate() {
+    els[current].classList.remove('visible');
+    current = (current + 1) % items.length;
+    els[current].classList.add('visible');
+  }
+  setInterval(rotate, 15000);
+})();
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   ABOUT ME SCROLLSPY
+───────────────────────────────────────────────────────────────────── */
+(function () {
+  const scrollEl = document.getElementById('about-content');
+  const dots      = document.querySelectorAll('.spy-dot');
+  const sections  = ['sec-exp','sec-edu','sec-skills','sec-recs'];
+  const qlinks    = document.querySelectorAll('.about-qlink');
+  const tmap      = { exp:'sec-exp', edu:'sec-edu', skills:'sec-skills', recs:'sec-recs' };
+
+  function updateDots(activeId) {
+    dots.forEach((d,i) => d.classList.toggle('active', sections[i]===activeId));
+    qlinks.forEach(q => q.classList.toggle('active', tmap[q.dataset.target] === activeId));
+  }
+
+  scrollEl.addEventListener('scroll', () => {
+    const top = scrollEl.getBoundingClientRect().top;
+    let closest = sections[0], minD = Infinity;
+    sections.forEach(id => {
+      const el = document.getElementById(id); if (!el) return;
+      const d = Math.abs(el.getBoundingClientRect().top - top);
+      if (d < minD) { minD = d; closest = id; }
+    });
+    updateDots(closest);
+  });
+
+  dots.forEach((dot,i) => dot.addEventListener('click', () => {
+    document.getElementById(sections[i])?.scrollIntoView({ behavior:'smooth', block:'start' });
+  }));
+
+  qlinks.forEach(link => link.addEventListener('click', () => {
+    const el = document.getElementById(tmap[link.dataset.target]); if (!el) return;
+    if (!document.getElementById('about').classList.contains('active')) {
+      window.showPage('about');
+      setTimeout(() => el.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+    } else { el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+  }));
+
+  updateDots(sections[0]);
+})();
+
+</script>
+
+<!-- PDF lightbox -->
+<div class="pdf-overlay" id="pdf-overlay">
+  <div class="pdf-viewer-wrap" id="pdf-viewer-wrap">
+    <div class="pdf-canvas-stack" id="pdf-canvas-stack">
+      <div class="pdf-loading" id="pdf-loading" style="display:none">Loading…</div>
+    </div>
+  </div>
+  <!-- Corner close -->
+  <div class="pdf-close-corner" onclick="closePdf()" title="Close (Esc)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </div>
+  <!-- Floating controls -->
+  <div class="pdf-controls" id="pdf-controls">
+    <div class="pdf-ctrl-btn" onclick="pdfZoom(-0.25)" title="Zoom out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </div>
+    <div class="pdf-ctrl-btn" onclick="pdfZoom(+0.25)" title="Zoom in">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </div>
+    <div class="pdf-ctrl-divider"></div>
+    <div class="pdf-ctrl-btn pdf-ctrl-close" onclick="closePdf()" title="Close (Esc)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function() {
+  const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let pdfDoc = null, scale = 1.2, rendering = false;
+
+  function getViewportWidth() {
+    // Max canvas width: viewport minus padding
+    return Math.min(window.innerWidth - 48, 900);
+  }
+
+  async function renderAll() {
+    if (!pdfDoc || rendering) return;
+    rendering = true;
+    const stack = document.getElementById('pdf-canvas-stack');
+    const maxW = getViewportWidth();
+
+    for (let p = 1; p <= pdfDoc.numPages; p++) {
+      const page = await pdfDoc.getPage(p);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const fitScale = (maxW / baseViewport.width) * scale;
+      const vp = page.getViewport({ scale: fitScale });
+
+      let canvas = stack.querySelector(`canvas[data-page="${p}"]`);
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.dataset.page = p;
+        stack.appendChild(canvas);
+      }
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      canvas.style.width = vp.width + 'px';
+      canvas.style.height = vp.height + 'px';
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    }
+    rendering = false;
+  }
+
+  window.openPdf = function(previewEl) {
+    const src = previewEl.dataset.src;
+    if (!src || !src.trim()) return;
+
+    const overlay = document.getElementById('pdf-overlay');
+    const stack = document.getElementById('pdf-canvas-stack');
+
+    // Reset — clear canvases but keep loading indicator in the stack
+    stack.querySelectorAll('canvas').forEach(c => c.remove());
+    const loading = document.getElementById('pdf-loading');
+    loading.textContent = 'Loading…';
+    loading.style.display = 'flex';
+    pdfDoc = null; scale = 1.2; rendering = false;
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => overlay.classList.add('visible'));
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+
+    // Fetch as blob to avoid cross-origin/local-file restrictions
+    fetch(src)
+      .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.arrayBuffer(); })
+      .then(buf => pdfjsLib.getDocument({ data: buf }).promise)
+      .then(doc => {
+        pdfDoc = doc;
+        loading.style.display = 'none';
+        renderAll();
+      })
+      .catch(() => {
+        loading.textContent = 'Could not load PDF.';
+      });
+  };
+
+  window.pdfZoom = function(delta) {
+    scale = Math.max(0.5, Math.min(3, scale + delta));
+    const stack = document.getElementById('pdf-canvas-stack');
+    // Remove existing canvases so they re-render at new scale
+    stack.querySelectorAll('canvas').forEach(c => c.remove());
+    rendering = false;
+    renderAll();
+  };
+
+  window.closePdf = function() {
+    const overlay = document.getElementById('pdf-overlay');
+    overlay.classList.remove('visible');
+    setTimeout(() => {
+      overlay.classList.remove('open');
+      document.getElementById('pdf-canvas-stack').querySelectorAll('canvas').forEach(c => c.remove());
+      document.getElementById('pdf-loading').style.display = 'none';
+      document.body.style.overflow = '';
+      pdfDoc = null;
+    }, 250);
+  };
+
+  // Close on backdrop click
+  document.getElementById('pdf-overlay').addEventListener('click', function(e) {
+    if (e.target === this || e.target === document.getElementById('pdf-viewer-wrap')) closePdf();
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePdf(); });
+})();
+</script>
+</body>
+</html>
