@@ -939,7 +939,11 @@
 
   /* ── Layout constants ── */
   const LAYER_COUNT  = 5;
-  const NODES_PER    = 14;     // fewer nodes per layer so connections are denser
+  function getNodesPerLayer() {
+    const area = window.innerWidth * window.innerHeight;
+    const base = 1920 * 1080;
+    return Math.max(4, Math.round(14 * (area / base)));
+  }
   const CONNECT_DIST = 170;
   const MOUSE_DIST   = 165;
   const BASE_SPEED   = 0.12;   // slowed down from 0.22
@@ -958,6 +962,7 @@
   /* ── Build nodes ensuring every node has at least one potential edge ── */
   function initNodes() {
     nodes = [];
+    const NODES_PER = getNodesPerLayer();
     for (let layer = 0; layer < LAYER_COUNT; layer++) {
       const xBand = W * (layer + 1) / (LAYER_COUNT + 1);
       // Determine label pool for this layer
