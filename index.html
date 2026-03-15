@@ -601,12 +601,13 @@
     body.mobile .about-quicknav {
       margin-left: 0; margin-right: 0;
       padding-left: 0; padding-right: 0;
-      flex-wrap: nowrap; overflow-x: hidden;
+      flex-wrap: nowrap; overflow-x: clip;
       justify-content: space-between;
       scrollbar-width: none;
     }
     body.mobile .about-quicknav::-webkit-scrollbar { display: none; }
     body.mobile .about-qlink { flex-shrink: 1; font-size: 11px; padding: 8px 6px; letter-spacing: 0; }
+    body.mobile .about-qlink::after { left: 6px; right: 6px; }
     body.mobile .about-sidebar { display: none; }
     body.mobile .edu-chip { font-size: 11px; }
     body.mobile .timeline-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
@@ -1491,14 +1492,13 @@
   }
 
   scrollEl.addEventListener('scroll', () => {
-    const top = scrollEl.getBoundingClientRect().top;
-    let closest = sections[0], minD = Infinity;
+    const threshold = scrollEl.getBoundingClientRect().top + scrollEl.offsetHeight * 0.4;
+    let active = sections[0];
     sections.forEach(id => {
       const el = document.getElementById(id); if (!el) return;
-      const d = Math.abs(el.getBoundingClientRect().top - top);
-      if (d < minD) { minD = d; closest = id; }
+      if (el.getBoundingClientRect().top <= threshold) active = id;
     });
-    updateDots(closest);
+    updateDots(active);
   });
 
   dots.forEach((dot,i) => dot.addEventListener('click', () => {
