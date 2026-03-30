@@ -983,9 +983,26 @@
             <div class="project-footer" style="margin-top:18px;"><span class="project-chip" id="txt-proj0-chip1">Python</span><span class="project-chip" id="txt-proj0-chip2">AST Parsing</span><span class="project-chip" id="txt-proj0-chip3">Web Scraping</span><span class="project-chip" id="txt-proj0-chip4">OCR</span><span class="project-chip">Flask</span><span class="project-chip">HTML</span></div>
           </div>
           <div style="width:200px; height:130px; border-radius:10px; border:1px solid var(--border); flex-shrink:0; overflow:hidden;">
-            <img src="precalculus-course_105189_large.jpg" alt="Luden preview" style="width:100%; height:100%; object-fit:cover; object-position:center;">
+            <img src="luden.jpg" alt="Luden preview" style="width:100%; height:100%; object-fit:cover; object-position:center;">
           </div>
         </a>
+        <div class="project-card" style="grid-column: 1 / -1; flex-direction: row; gap: 32px; align-items: flex-start; opacity: 0.85;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <div class="project-tag">CHROME EXTENSION</div>
+              <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#f59e0b; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:5px; padding:2px 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Work in Progress
+              </span>
+            </div>
+            <div class="project-title" style="font-size:19px; margin-top:10px;">True Rating</div>
+            <div class="project-desc" style="margin-top:12px;">A browser extension and ML pipeline that corrects inflated product ratings caused by viral hype events. Detects anomalous review windows using time-series analysis, scores linguistic sincerity with a fine-tuned transformer model, and recalculates a weighted Bayesian "true rating" that discounts reviews posted during influencer-driven demand spikes.</div>
+            <div class="project-footer" style="margin-top:18px;"><span class="project-chip">Python</span><span class="project-chip">NLP</span><span class="project-chip">DeBERTa</span><span class="project-chip">Scikit-learn</span><span class="project-chip">FastAPI</span><span class="project-chip">JavaScript</span><span class="project-chip">Chrome Extension</span></div>
+          </div>
+          <div style="width:200px; height:130px; border-radius:10px; border:1px solid var(--border); flex-shrink:0; overflow:hidden;">
+            <img src="true_rating.png" alt="True Rating preview" style="width:100%; height:100%; object-fit:cover; object-position:center;">
+          </div>
+        </div>
         <div class="project-card" style="grid-column: 1 / -1; flex-direction: row; gap: 32px; align-items: flex-start;">
           <div style="flex:1;">
             <div class="project-tag">Software</div>
@@ -994,7 +1011,7 @@
             <div class="project-footer" style="margin-top:18px;"><span class="project-chip" id="txt-proj3-chip1">CesiumJS</span><span class="project-chip" id="txt-proj3-chip2">JavaScript</span><span class="project-chip" id="txt-proj3-chip3">HTML</span></div>
           </div>
           <div style="width:200px; height:130px; border-radius:10px; border:1px solid var(--border); flex-shrink:0; overflow:hidden;">
-            <img src="59b496e4-5cbf-41eb-96c4-4a6396fba1bc_globe (1).png" alt="Brazos preview" style="width:100%; height:100%; object-fit:cover; object-position:center;">
+            <img src="cesium.png" alt="Brazos preview" style="width:100%; height:100%; object-fit:cover; object-position:center;">
           </div>
         </div>
       </div>
@@ -1552,7 +1569,6 @@
   let pdfDoc = null, scale = 1.2, rendering = false;
 
   function getViewportWidth() {
-    // Max canvas width: viewport minus padding
     return Math.min(window.innerWidth - 48, 900);
   }
 
@@ -1590,7 +1606,6 @@
     const overlay = document.getElementById('pdf-overlay');
     const stack = document.getElementById('pdf-canvas-stack');
 
-    // Reset — clear canvases but keep loading indicator in the stack
     stack.querySelectorAll('canvas').forEach(c => c.remove());
     const loading = document.getElementById('pdf-loading');
     loading.textContent = 'Loading…';
@@ -1603,7 +1618,6 @@
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
 
-    // Fetch as blob to avoid cross-origin/local-file restrictions
     fetch(src)
       .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.arrayBuffer(); })
       .then(buf => pdfjsLib.getDocument({ data: buf }).promise)
@@ -1620,7 +1634,6 @@
   window.pdfZoom = function(delta) {
     scale = Math.max(0.5, Math.min(3, scale + delta));
     const stack = document.getElementById('pdf-canvas-stack');
-    // Remove existing canvases so they re-render at new scale
     stack.querySelectorAll('canvas').forEach(c => c.remove());
     rendering = false;
     renderAll();
@@ -1638,7 +1651,6 @@
     }, 250);
   };
 
-  // Close on backdrop click
   document.getElementById('pdf-overlay').addEventListener('click', function(e) {
     if (e.target === this || e.target === document.getElementById('pdf-viewer-wrap')) closePdf();
   });
