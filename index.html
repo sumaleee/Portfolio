@@ -37,6 +37,9 @@
 
     /* ─── Reset ─────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body.theme-transitioning, body.theme-transitioning * {
+      transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease !important;
+    }
     html { scroll-behavior: smooth; }
     body {
       background: var(--bg);
@@ -567,6 +570,59 @@
     #iphone-sim-btn:hover { border-color: var(--accent); color: var(--accent); }
     #iphone-sim-btn svg { width: 13px; height: 13px; }
 
+    /* ─── Light Mode ────────────────────────────────────────────────── */
+    body.light {
+      --bg:          #f5f5f7;
+      --surface:     #ffffff;
+      --surface-2:   #ebebef;
+      --border:      rgba(0,0,0,0.09);
+      --text:        #0d0d0f;
+      --text-dim:    rgba(0,0,0,0.54);
+      --text-faint:  rgba(0,0,0,0.32);
+      --accent:      #7c3aed;
+      --accent-dim:  rgba(124,58,237,0.1);
+      --accent-glow: rgba(124,58,237,0.22);
+    }
+    body.light nav {
+      background: rgba(245,245,247,0.85);
+    }
+    body.light .hero-name { color: var(--text); }
+    body.light .hero-tagline { color: rgba(0,0,0,0.75); }
+    body.light .rotating-text-item { color: rgba(0,0,0,0.5); }
+    body.light .rotating-text-item.clickable:hover { color: rgba(0,0,0,0.8); }
+    body.light .social-btn {
+      border-color: rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.04);
+      color: rgba(0,0,0,0.5);
+    }
+    body.light .social-btn:hover { color: var(--text); }
+    body.light .about-quicknav { background: rgba(245,245,247,0.92); }
+    body.light .chip { background: rgba(0,0,0,0.04); }
+    body.light .edu-chip { background: rgba(0,0,0,0.04); }
+    body.light .project-chip { background: rgba(0,0,0,0.04); }
+    body.light .ref-quote-text { color: rgba(0,0,0,0.72); }
+    body.light .ref-btn-dl { background: rgba(0,0,0,0.04); }
+    body.light .ref-btn-dl:hover { background: rgba(0,0,0,0.08); }
+    body.light .project-card:hover { box-shadow: 0 10px 36px rgba(0,0,0,0.12); }
+    body.light .pause-btn:hover { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.18); }
+    body.light.mobile .nav-bottom { background: rgba(245,245,247,0.94); }
+
+    /* Theme toggle button */
+    #theme-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 7px;
+      color: var(--text-faint); flex-shrink: 0;
+      transition: color var(--transition), border-color var(--transition), background var(--transition);
+    }
+    #theme-btn:hover { color: var(--text-dim); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+    body.light #theme-btn:hover { border-color: rgba(0,0,0,0.18); background: rgba(0,0,0,0.05); }
+    #theme-btn svg { width: 14px; height: 14px; }
+    #theme-btn .icon-moon { display: block; }
+    #theme-btn .icon-sun  { display: none; }
+    body.light #theme-btn .icon-moon { display: none; }
+    body.light #theme-btn .icon-sun  { display: block; }
+
     /* ─── Mobile styles (body.mobile) ───────────────────────────────── */
     body.mobile {
       --hero-name-size: clamp(32px, 9.5vw, 48px);
@@ -641,6 +697,10 @@
     <button id="iphone-sim-btn" title="Preview iPhone 13">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
       iPhone
+    </button>
+    <button id="theme-btn" aria-label="Toggle light/dark mode">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
     <button class="pause-btn" id="pause-btn" aria-label="Pause animation">
       <svg id="pause-icon" viewBox="0 0 12 12" fill="currentColor">
@@ -752,7 +812,7 @@
                   </span>
                   <span class="timeline-meta-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Remote
+                    Tampa, FL / Remote
                   </span>
                 </div>
                 <div class="timeline-desc">Built scoring models, ranked acquisition datasets, and multi-source data pipelines for client-facing decision support and targeting workflows.</div>
@@ -772,7 +832,7 @@
                   </span>
                   <span class="timeline-meta-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Fort Worth / Remote
+                    Fort Worth, TX / Remote
                   </span>
                 </div>
                 <div class="timeline-desc">Tutor high school and university students in Calculus, Precalculus, and Advanced Algebra, with work that later informed the design of Luden, a system for more individualized lesson planning.</div>
@@ -869,7 +929,7 @@
                 </div>
                 <div class="skill-group-label">Languages</div>
               </div>
-              <div class="skill-chips"><span class="chip">Python</span><span class="chip">JavaScript</span><span class="chip">SQL</span><span class="chip">R</span><span class="chip">Java</span></div>
+              <div class="skill-chips"><span class="chip">Python</span><span class="chip">JavaScript</span><span class="chip">SQL</span><span class="chip">R</span><span class="chip">Java</span><span class="chip">C / C++</span></div>
             </div>
             <div class="skill-group">
               <div class="skill-group-header">
@@ -878,7 +938,7 @@
                 </div>
                 <div class="skill-group-label">Libraries / Frameworks</div>
               </div>
-              <div class="skill-chips"><span class="chip">PyTorch</span><span class="chip">scikit-learn</span><span class="chip">pandas</span><span class="chip">NumPy</span><span class="chip">statsmodels</span><span class="chip">Flask</span><span class="chip">CesiumJS</span></div>
+              <div class="skill-chips"><span class="chip">PyTorch</span><span class="chip">scikit-learn</span><span class="chip">pandas</span><span class="chip">NumPy</span><span class="chip">Matplotlib</span><span class="chip">statsmodels</span><span class="chip">Flask</span><span class="chip">CesiumJS</span></div>
             </div>
             <div class="skill-group">
               <div class="skill-group-header">
@@ -887,7 +947,7 @@
                 </div>
                 <div class="skill-group-label">Tools</div>
               </div>
-              <div class="skill-chips"><span class="chip">Git</span><span class="chip">GitHub</span><span class="chip">Linux / Unix</span><span class="chip">Jupyter Notebook</span></div>
+              <div class="skill-chips"><span class="chip">Git</span><span class="chip">VS Code</span><span class="chip">GitHub</span><span class="chip">Google Colab</span><span class="chip">Linux / Unix</span><span class="chip">Jupyter Notebook</span></div>
             </div>
             <div class="skill-group">
               <div class="skill-group-header">
@@ -1446,6 +1506,20 @@
     document.body.classList.toggle('anim-paused', nowPaused);
     pauseIcon.style.display = nowPaused ? 'none' : '';
     playIcon.style.display  = nowPaused ? ''     : 'none';
+  });
+})();
+
+// ─── Theme toggle ────────────────────────────────────────────────────
+(function () {
+  const themeBtn = document.getElementById('theme-btn');
+  const isLight = localStorage.getItem('theme') === 'light';
+  if (isLight) document.body.classList.add('light');
+
+  themeBtn.addEventListener('click', () => {
+    document.body.classList.add('theme-transitioning');
+    const nowLight = document.body.classList.toggle('light');
+    localStorage.setItem('theme', nowLight ? 'light' : 'dark');
+    setTimeout(() => document.body.classList.remove('theme-transitioning'), 420);
   });
 })();
 
